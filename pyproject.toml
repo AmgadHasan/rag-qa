@@ -1,0 +1,15 @@
+[project]
+name = "rag-qa"
+version = "0.1.0"
+description = " Agent Framework for RAG-Based Question Generation and Summarization"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi[standard]>=0.115.5",
+    "langchain-qdrant>=0.2.0",
+    "langchain-text-splitters>=0.3.2",
+    "openai>=1.54.4",
+    "pymupdf>=1.24.13",
+    "pypdf>=5.1.0",
+    "qdrant-client>=1.12.1",
+]
