@@ -1,27 +1,42 @@
+import io
+import os
+import uuid
+
+import json
+
+import pymupdf
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from qdrant_client import QdrantClient, models
 from qdrant_client.models import Distance, VectorParams
-import pymupdf
-from models import DocumentMetadata
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from embedding import embed_texts, embed_query, EMBEDDING_DIMENSION
-import os
-import io
-import uuid
-from utils import get_logger
 
-logger = get_logger(logger_name="vectorstore", log_file="api.log", log_level='info')
-# Configuration for Qdrant client
-QDRANT_HOST = os.environ.get("QDRANT_HOST", "http://localhost")
-QDRANT_PORT = os.environ.get("QDRANT_PORT", 6333)
-client = QdrantClient(url=f"{QDRANT_HOST}:{QDRANT_PORT}")
+from src.embedding import EMBEDDING_DIMENSION, embed_query, embed_texts
+from src.models import DocumentMetadata
+from src.utils import create_logger, log_execution_time
 
-# Initialize text splitter
+logger = create_logger(logger_name="vectorstore", log_file="api.log", log_level='info')
+
+
+
+def get_qdrant_client():
+    QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")
+    client = QdrantClient(url=QDRANT_URL)
+    try:
+        yield client
+    finally:
+        client.close()
+    
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=512,
     chunk_overlap=20,
     length_function=len,
     is_separator_regex=False,
 )
+
+def split_text(text):
+    chunks = text_splitter.create_documents([text])
+    chunks_texts = [chunk.page_content for chunk in chunks]
+
+    return chunks_texts
 
 def load_and_split_document(document_file: io.BytesIO) -> list[str]:
     """
@@ -37,16 +52,13 @@ def load_and_split_document(document_file: io.BytesIO) -> list[str]:
     document_text = ""
     for page in doc:
         document_text += page.get_text()
+    chunks = split_text(document_text)
     
-    chunks = text_splitter.create_documents([document_text])
-    chunks_texts = [chunk.page_content for chunk in chunks]
+    logger.debug(f"Lengths after chunking: {len(chunks)}")
     
-    logger.debug("Lengths after chunking")
-    logger.debug(len(chunks_texts))
-    
-    return chunks_texts
+    return chunks
 
-def ingest_document(pdf_file: io.BytesIO) -> DocumentMetadata:
+def ingest_document(pdf_file: io.BytesIO, client: QdrantClient) -> DocumentMetadata:
     """
     Ingest a PDF document into Qdrant by creating a collection, splitting the document,
     embedding the text chunks, and upserting them into the collection.
@@ -78,6 +90,19 @@ def ingest_document(pdf_file: io.BytesIO) -> DocumentMetadata:
         )
     except Exception as e:
         # Need proper error handling and logging here
-        logger.error(e)
+        logger.exception(f"failed to upsert: {e}")
     
     return DocumentMetadata(id=collection_id, file_name=pdf_file.name)
+
+@log_execution_time(logger=logger)
+def retrieve_relevant_context(topic: str, client: QdrantClient) -> list[str]:
+    query_embeddings = embed_query(query=topic)
+    search_result = client.query_points(
+        collection_name="71a18a69-2dbd-466b-99e5-4e3e213430a9",
+        query=query_embeddings,
+        with_payload=True,
+        limit=10
+    ).points
+    logger.debug(f"{search_result=}")
+    retrieved_chunks = [point.payload['text']for point in search_result]
+    return retrieved_chunks

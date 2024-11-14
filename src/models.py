@@ -5,9 +5,10 @@ class DocumentMetadata(BaseModel):
     file_name: str
 
 class QA(BaseModel):
-    length: int
+    topic: str
+    type: str
     text: str
 
-class Summary(BaseModel):
-    text: str
-    length: int
+class SummaryResponse(BaseModel):
+    topic: str
+    summary: str
