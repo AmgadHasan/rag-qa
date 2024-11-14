@@ -2,8 +2,6 @@ import io
 import os
 import uuid
 
-import json
-
 import pymupdf
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from qdrant_client import QdrantClient, models
@@ -13,8 +11,7 @@ from src.embedding import EMBEDDING_DIMENSION, embed_query, embed_texts
 from src.models import DocumentMetadata
 from src.utils import create_logger, log_execution_time
 
-logger = create_logger(logger_name="vectorstore", log_file="api.log", log_level='info')
-
+logger = create_logger(logger_name="vectorstore", log_file="api.log", log_level="info")
 
 
 def get_qdrant_client():
@@ -24,7 +21,8 @@ def get_qdrant_client():
         yield client
     finally:
         client.close()
-    
+
+
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=512,
     chunk_overlap=20,
@@ -32,11 +30,13 @@ text_splitter = RecursiveCharacterTextSplitter(
     is_separator_regex=False,
 )
 
+
 def split_text(text):
     chunks = text_splitter.create_documents([text])
     chunks_texts = [chunk.page_content for chunk in chunks]
 
     return chunks_texts
+
 
 def load_and_split_document(document_file: io.BytesIO) -> list[str]:
     """
@@ -48,15 +48,16 @@ def load_and_split_document(document_file: io.BytesIO) -> list[str]:
     Returns:
         list[str]: A list of text chunks.
     """
-    doc = pymupdf.Document(stream=document_file, filetype='pdf')
+    doc = pymupdf.Document(stream=document_file, filetype="pdf")
     document_text = ""
     for page in doc:
         document_text += page.get_text()
     chunks = split_text(document_text)
-    
+
     logger.debug(f"Lengths after chunking: {len(chunks)}")
-    
+
     return chunks
+
 
 def ingest_document(pdf_file: io.BytesIO, client: QdrantClient) -> DocumentMetadata:
     """
@@ -70,15 +71,15 @@ def ingest_document(pdf_file: io.BytesIO, client: QdrantClient) -> DocumentMetad
         DocumentMetadata: Metadata of the ingested document.
     """
     collection_id = str(uuid.uuid4())
-    
+
     client.create_collection(
         collection_name=collection_id,
         vectors_config=VectorParams(size=EMBEDDING_DIMENSION, distance=Distance.DOT),
     )
-    
+
     chunks = load_and_split_document(document_file=pdf_file)
     vectors = embed_texts(texts=chunks)
-    
+
     try:
         client.upsert(
             collection_name=collection_id,
@@ -91,18 +92,18 @@ def ingest_document(pdf_file: io.BytesIO, client: QdrantClient) -> DocumentMetad
     except Exception as e:
         # Need proper error handling and logging here
         logger.exception(f"failed to upsert: {e}")
-    
+
     return DocumentMetadata(id=collection_id, file_name=pdf_file.name)
 
+
 @log_execution_time(logger=logger)
-def retrieve_relevant_context(topic: str, document_id: str, client: QdrantClient) -> list[str]:
+def retrieve_relevant_context(
+    topic: str, document_id: str, client: QdrantClient
+) -> list[str]:
     query_embeddings = embed_query(query=topic)
     search_result = client.query_points(
-        collection_name=document_id,
-        query=query_embeddings,
-        with_payload=True,
-        limit=10
+        collection_name=document_id, query=query_embeddings, with_payload=True, limit=10
     ).points
     logger.debug(f"{search_result=}")
-    retrieved_chunks = [point.payload['text']for point in search_result]
+    retrieved_chunks = [point.payload["text"] for point in search_result]
     return retrieved_chunks

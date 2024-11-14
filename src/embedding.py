@@ -1,6 +1,8 @@
-import requests
 import os
-from src.utils import create_logger, log_execution_time 
+
+import requests
+
+from src.utils import create_logger, log_execution_time
 
 # Environment variables
 JINA_API_KEY = os.environ.get("JINA_API_KEY")
@@ -10,13 +12,14 @@ EMBEDDING_DIMENSION = 1024
 # API endpoint
 URL = "https://api.jina.ai/v1/embeddings"
 
-logger = create_logger(logger_name="embedding", log_file="api.log", log_level='info')
+logger = create_logger(logger_name="embedding", log_file="api.log", log_level="info")
 
 # HTTP headers for API requests
 headers = {
     "Content-Type": "application/json",
     "Authorization": f"Bearer {JINA_API_KEY}",
 }
+
 
 @log_execution_time(logger=logger)
 def embed_texts(texts: list[str]) -> list[list[float]]:
@@ -35,7 +38,7 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
     """
     embeddings = []
     for i in range(0, len(texts), 8):
-        chunk = texts[i:i+8]
+        chunk = texts[i : i + 8]
         data = {
             "input": chunk,
             "model": MODEL,
@@ -46,8 +49,9 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
         response = requests.post(URL, headers=headers, json=data)
         chunk_embeddings = [d["embedding"] for d in response.json()["data"]]
         embeddings.extend(chunk_embeddings)
-    
+
     return embeddings
+
 
 @log_execution_time(logger=logger)
 def embed_query(query: str) -> list[float]:

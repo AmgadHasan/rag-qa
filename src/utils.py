@@ -32,6 +32,7 @@ def create_logger(logger_name, log_file, log_level):
 
 def log_execution_time(logger):
     """Decorator factory to log the execution time of a function using a specified logger."""
+
     def decorator(func):
         def wrapper(*args, **kwargs):
             start_time = time.time()  # Capture the start time
@@ -40,7 +41,9 @@ def log_execution_time(logger):
             execution_time = end_time - start_time  # Calculate the execution time
             logger.info(f"Executing {func.__name__} took {execution_time:.4f} seconds")
             return result
+
         return wrapper
+
     return decorator
 
 

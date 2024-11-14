@@ -17,6 +17,10 @@ Start the application:
 ```sh
 docker compose --profile dev up
 ```
+or
+```sh
+bash run.sh
+```
 This will:
 1. Start the qdrant vectorstore
 2. Start the fastapi api server
@@ -48,12 +52,25 @@ Example request :
 curl -X 'POST' \
   'http://localhost:8000/generate/questions' \
   -H 'accept: application/json' \
-
+  -H 'Content-Type: application/json' \
+  -d '{
+  "topic": "slope",
+  "document_id": "71a18a69-2dbd-466b-99e5-4e3e213430a9",
+  "questions_type": "MCQ"
+}'
 ``` 
 response:
-```
+```json
 {
-
+  "topic": "slope",
+  "questions_type": "MCQ",
+  "questions": [
+    "What does the slope of a line represent?",
+    "What is the formula for calculating the slope of a line given two points?",
+    "If the slope of a line is positive, what does this tell you about the line?",
+    "If the slope of a line is zero, what does this tell you about the line?",
+    "If the slope of a line is undefined, what does this tell you about the line?"
+  ]
 }
 ```
 
@@ -63,21 +80,27 @@ Example request :
 curl -X 'POST' \
   'http://localhost:8000/generate/summary' \
   -H 'accept: application/json' \
-
+  -H 'Content-Type: application/json' \
+  -d '{
+  "topic": "slope",
+  "document_id": "71a18a69-2dbd-466b-99e5-4e3e213430a9"
+}'
 ``` 
 response:
-```
+```json
 {
-    
+  "detail": "Error generating summary: Error code: 400 - {'error': {'message': \"property 'max_completion_tokens' is unsupported, did you mean 'max_tokens'?\", 'type': 'invalid_request_error'}}"
 }
 ```
 
-## Draft
-Requirements:
-1. agent-based framework
-2. Rag
-3. PDF files
-4. python
-5. LLMs
-6. Need instructions and documentations
-7. 
+## Future work
+These are some areas that could be improved upon:
+
+### Async operations
+We can improve the performance by implementing asnyc calls and making the code non-blocking in general.
+### Optimizing Batch Embedding
+Currently, we're looping sequentially over the chunks in minibatches of 8. We can improve this by implementing concurrent api requests.
+
+
+### Structured Output for the LLM
+In the questions generations endpoint, we can ask for a structured output of a certain schema to ensure proper parsing of the response.
