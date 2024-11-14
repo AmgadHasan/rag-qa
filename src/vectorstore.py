@@ -7,7 +7,9 @@ from embedding import embed_texts, embed_query, EMBEDDING_DIMENSION
 import os
 import io
 import uuid
+from utils import get_logger
 
+logger = get_logger(logger_name="vectorstore", log_file="api.log", log_level='info')
 # Configuration for Qdrant client
 QDRANT_HOST = os.environ.get("QDRANT_HOST", "http://localhost")
 QDRANT_PORT = os.environ.get("QDRANT_PORT", 6333)
@@ -39,8 +41,8 @@ def load_and_split_document(document_file: io.BytesIO) -> list[str]:
     chunks = text_splitter.create_documents([document_text])
     chunks_texts = [chunk.page_content for chunk in chunks]
     
-    print("Lengths after chunking")
-    print(len(chunks_texts))
+    logger.debug("Lengths after chunking")
+    logger.debug(len(chunks_texts))
     
     return chunks_texts
 
@@ -76,6 +78,6 @@ def ingest_document(pdf_file: io.BytesIO) -> DocumentMetadata:
         )
     except Exception as e:
         # Need proper error handling and logging here
-        print(e)
+        logger.error(e)
     
     return DocumentMetadata(id=collection_id, file_name=pdf_file.name)
