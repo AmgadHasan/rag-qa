@@ -29,12 +29,9 @@ async def ingest_pdf(file: UploadFile = File(...), client: QdrantClient = Depend
     return document_metadata
 
 @app.post("/generate/summary")
-async def generate_summary(topic: str, client: QdrantClient = Depends(get_qdrant_client)) -> models.SummaryResponse:
+async def generate_summary(topic: str, document_id: str, client: QdrantClient = Depends(get_qdrant_client)) -> models.SummaryResponse:
     try:
-        print("################"*100)
-        print("Trying")
-        chunks = retrieve_relevant_context(topic=topic, client=client)
-        print("Retriev")
+        chunks = retrieve_relevant_context(topic=topic, document_id=document_id, client=client)
         summary = summarize_topic(topic=topic, relevant_chunks=chunks)
         return models.SummaryResponse(topic=topic, summary=summary)
     except Exception as e:

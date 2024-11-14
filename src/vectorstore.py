@@ -95,10 +95,10 @@ def ingest_document(pdf_file: io.BytesIO, client: QdrantClient) -> DocumentMetad
     return DocumentMetadata(id=collection_id, file_name=pdf_file.name)
 
 @log_execution_time(logger=logger)
-def retrieve_relevant_context(topic: str, client: QdrantClient) -> list[str]:
+def retrieve_relevant_context(topic: str, document_id: str, client: QdrantClient) -> list[str]:
     query_embeddings = embed_query(query=topic)
     search_result = client.query_points(
-        collection_name="71a18a69-2dbd-466b-99e5-4e3e213430a9",
+        collection_name=document_id,
         query=query_embeddings,
         with_payload=True,
         limit=10
