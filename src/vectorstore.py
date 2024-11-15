@@ -7,14 +7,14 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from qdrant_client import QdrantClient, models
 from qdrant_client.models import Distance, VectorParams
 
-from src.embedding import EMBEDDING_DIMENSION, embed_query, embed_texts
+from src.emb import EMBEDDING_DIMENSION, embed_query, embed_texts
 from src.models import DocumentMetadata
 from src.utils import create_logger, log_execution_time
 
 logger = create_logger(logger_name="vectorstore", log_file="api.log", log_level="info")
 
 
-def get_qdrant_client():
+def get_qdrant_client() -> QdrantClient:
     QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")
     client = QdrantClient(url=QDRANT_URL)
     try:
@@ -89,21 +89,30 @@ def ingest_document(pdf_file: io.BytesIO, client: QdrantClient) -> DocumentMetad
                 vectors=vectors,
             ),
         )
+        logger.info(f"Generated {len(chunks)} chunks and upserted into vectordb")
+        return DocumentMetadata(id=collection_id, file_name=pdf_file.name)
     except Exception as e:
         # Need proper error handling and logging here
         logger.exception(f"failed to upsert: {e}")
-
-    return DocumentMetadata(id=collection_id, file_name=pdf_file.name)
+        raise
 
 
 @log_execution_time(logger=logger)
 def retrieve_relevant_context(
     topic: str, document_id: str, client: QdrantClient
 ) -> list[str]:
-    query_embeddings = embed_query(query=topic)
-    search_result = client.query_points(
-        collection_name=document_id, query=query_embeddings, with_payload=True, limit=10
-    ).points
-    logger.debug(f"{search_result=}")
-    retrieved_chunks = [point.payload["text"] for point in search_result]
-    return retrieved_chunks
+    try:
+        query_embeddings = embed_query(query=topic)
+        search_result = client.query_points(
+            collection_name=document_id,
+            query=query_embeddings,
+            with_payload=True,
+            limit=10,
+        ).points
+        logger.debug(f"{search_result=}")
+        retrieved_chunks = [point.payload["text"] for point in search_result]
+        logger.info(f"Retrieved {len(retrieved_chunks)} relevant chunks.")
+        return retrieved_chunks
+    except Exception as e:
+        logger.exception(f"failed to retrieve relecant context: {e}")
+        raise

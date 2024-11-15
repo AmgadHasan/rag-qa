@@ -25,7 +25,7 @@ class QuestionsRequest(BaseModel):
 class QuestionsResponse(BaseModel):
     topic: str
     questions_type: QuestionsType
-    questions: list
+    questions: str
 
     class Config:
         use_enum_values = True
@@ -33,7 +33,7 @@ class QuestionsResponse(BaseModel):
 
 class SummaryRequest(BaseModel):
     topic: str
-    summary: str
+    document_id: str
 
 
 class SummaryResponse(BaseModel):

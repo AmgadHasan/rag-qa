@@ -25,10 +25,9 @@ This will:
 1. Start the qdrant vectorstore
 2. Start the fastapi api server
 
-## Using the framework
+## Endpoints
 Go to http://localhost:8000/docs and try out the different endpoints.
 
-## Endpoints
 ### 1. `/ingest`
 Example request using `ML Engineer Tech Test.pdf` file:
 ```sh
@@ -91,6 +90,13 @@ response:
 {
   "detail": "Error generating summary: Error code: 400 - {'error': {'message': \"property 'max_completion_tokens' is unsupported, did you mean 'max_tokens'?\", 'type': 'invalid_request_error'}}"
 }
+```
+
+## Development
+### Testing
+To run the tests, run:
+```sh
+uv run pytest
 ```
 
 ## Future work

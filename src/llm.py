@@ -40,7 +40,7 @@ def prepare_context(relevant_chunks: list[str]) -> str:
 @log_execution_time(logger=logger)
 def provide_questions(
     topic: str, type: QuestionsType, relevant_chunks: list[str]
-) -> list:
+) -> str:
     """
     Generate questions for a given topic based on relevant chunks of text.
 
@@ -68,15 +68,12 @@ def provide_questions(
             model=model,
             temperature=TEMPERATURE,
             max_tokens=MAX_COMPLETION_TOKENS,
-            response_format={"type": "json_object"},
         )
-        text_response = completion.choices[0].message.content
-        print(f"text_response:\n{text_response}")
-        questions = json.loads(text_response)["questions"]
+        response = completion.choices[0].message.content
+        return response
     except Exception as e:
         logger.error(f"Error generating questions for topic '{topic}': {e}")
         raise
-    return questions
 
 
 @log_execution_time(logger=logger)

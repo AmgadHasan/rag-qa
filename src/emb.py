@@ -4,21 +4,40 @@ import requests
 
 from src.utils import create_logger, log_execution_time
 
-# Environment variables
 JINA_API_KEY = os.environ.get("JINA_API_KEY")
 MODEL = os.environ.get("JINA_MODEL", "jina-embeddings-v3")
 EMBEDDING_DIMENSION = 1024
 
-# API endpoint
 URL = "https://api.jina.ai/v1/embeddings"
 
 logger = create_logger(logger_name="embedding", log_file="api.log", log_level="info")
 
-# HTTP headers for API requests
 headers = {
     "Content-Type": "application/json",
     "Authorization": f"Bearer {JINA_API_KEY}",
 }
+
+
+def request_embeddings(
+    input: str | list[str],
+    task: str = "retrieval.passage",
+    model: str = MODEL,
+    dimensions: int = EMBEDDING_DIMENSION,
+    late_chunking: bool = True,
+):
+    data = {
+        "input": input,
+        "model": MODEL,
+        "dimensions": EMBEDDING_DIMENSION,
+        "task": "retrieval.passage",
+        "late_chunking": True,
+    }
+    try:
+        response = requests.post(URL, headers=headers, json=data)
+        return [d["embedding"] for d in response.json()["data"]]
+    except Exception as e:
+        logger.exception(f"Failed to generate embeddigns: {e}\nResponse: {response}")
+        raise
 
 
 @log_execution_time(logger=logger)
@@ -36,21 +55,13 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
     Returns:
         list[list[float]]: A list of embeddings, where each embedding is a list of floats.
     """
-    embeddings = []
+    full_embeddings = []
     for i in range(0, len(texts), 8):
-        chunk = texts[i : i + 8]
-        data = {
-            "input": chunk,
-            "model": MODEL,
-            "dimensions": EMBEDDING_DIMENSION,
-            "task": "retrieval.passage",
-            "late_chunking": True,
-        }
-        response = requests.post(URL, headers=headers, json=data)
-        chunk_embeddings = [d["embedding"] for d in response.json()["data"]]
-        embeddings.extend(chunk_embeddings)
+        batch = texts[i : i + 8]
+        batch_embeddings = request_embeddings(input=batch, task="retrieval.passage")
+        full_embeddings.extend(batch_embeddings)
 
-    return embeddings
+    return full_embeddings
 
 
 @log_execution_time(logger=logger)
@@ -64,13 +75,5 @@ def embed_query(query: str) -> list[float]:
     Returns:
         list[float]: The embedding for the query, represented as a list of floats.
     """
-    data = {
-        "input": query,
-        "model": MODEL,
-        "dimensions": EMBEDDING_DIMENSION,
-        "task": "retrieval.query",
-        "late_chunking": True,
-    }
-    response = requests.post(URL, headers=headers, json=data)
-    embeddings = [d["embedding"] for d in response.json()["data"]]
-    return embeddings[0]
+    batch_embeddings = request_embeddings(input=query, task="retrieval.query")
+    return batch_embeddings[0]

@@ -62,7 +62,7 @@ def test_ingest_pdf_success(
         id="123", file_name="test.pdf"
     )
 
-    with open("./samples/ML Engineer Tech Test.pdf", "rb") as f:
+    with open("./samples/ml-engineer-tech-test.pdf", "rb") as f:
         response = client.post("/ingest", files={"file": f})
 
     assert response.status_code == 200
@@ -94,7 +94,13 @@ def test_generate_summary_success(
     mock_retrieve_relevant_context.return_value = ["chunk1", "chunk2"]
     mock_summarize_topic.return_value = "Summary of the topic"
 
-    response = client.post("/generate/summary", params={"topic": "test topic"})
+    response = client.post(
+        "/generate/summary",
+        json={
+            "topic": "test topic",
+            "document_id": "e2b9c8c1-7892-4dc9-b273-1f4c19802b1b",
+        },
+    )
     assert response.status_code == 200
     assert response.json() == {"topic": "test topic", "summary": "Summary of the topic"}
 
@@ -104,7 +110,13 @@ def test_generate_summary_failure(
 ):
     mock_retrieve_relevant_context.side_effect = Exception("Failed to retrieve context")
 
-    response = client.post("/generate/summary", params={"topic": "test topic"})
+    response = client.post(
+        "/generate/summary",
+        json={
+            "topic": "test topic",
+            "document_id": "e2b9c8c1-7892-4dc9-b273-1f4c19802b1b",
+        },
+    )
 
     assert response.status_code == 500
-    assert "Error processing PDF" in response.json()["detail"]
+    assert "Error generating summary:" in response.json()["detail"]

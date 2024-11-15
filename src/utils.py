@@ -7,21 +7,17 @@ from starlette.datastructures import UploadFile
 
 
 def create_logger(logger_name, log_file, log_level):
-    # Set up logging
     LOG_FORMAT = "[%(asctime)s | %(name)s | %(levelname)s | %(message)s]"
-    log_level = getattr(logging, log_level.upper())  # convert to uppercase
+    log_level = getattr(logging, log_level.upper())
 
-    # Create a logger
     logger = logging.getLogger(logger_name)
-    logger.setLevel(logging.DEBUG)  # set the logger level to DEBUG
+    logger.setLevel(logging.DEBUG)
 
-    # Add a file handler to log to a file with DEBUG level
     file_handler = logging.FileHandler(log_file)
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(logging.Formatter(LOG_FORMAT))
     logger.addHandler(file_handler)
 
-    # Add a console handler to log to the console with INFO level
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(logging.Formatter(LOG_FORMAT))
@@ -35,10 +31,10 @@ def log_execution_time(logger):
 
     def decorator(func):
         def wrapper(*args, **kwargs):
-            start_time = time.time()  # Capture the start time
-            result = func(*args, **kwargs)  # Execute the function
-            end_time = time.time()  # Capture the end time
-            execution_time = end_time - start_time  # Calculate the execution time
+            start_time = time.time()
+            result = func(*args, **kwargs)
+            end_time = time.time()
+            execution_time = end_time - start_time
             logger.info(f"Executing {func.__name__} took {execution_time:.4f} seconds")
             return result
 
