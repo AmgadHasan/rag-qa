@@ -16,8 +16,7 @@ from src.vectorstore import (
     split_text,
 )
 
-PDF_FILE_PATH = "./samples/ml-engineer-tech-test.pdf"
-DOCUMENT_ID = "71a18a69-2dbd-466b-99e5-4e3e213430a9"
+from . import CHUNKED_PDF_FILE_PATH, DOCUMENT_ID, PDF_FILE_PATH, WORDS_IN_DOCUMENT
 
 
 @pytest.fixture
@@ -34,7 +33,7 @@ def mock_pdf_file():
 
 @pytest.fixture
 def mock_chunks():
-    with open("./samples/chunked-ml-engineer-tech-test.json", "r") as f:
+    with open(CHUNKED_PDF_FILE_PATH, "r") as f:
         chunks = json.load(f)
     return chunks
 
@@ -101,7 +100,7 @@ def mock_embed_query(monkeypatch, mock_query_embeddings):
 @pytest.fixture(autouse=True)
 def mock_embed_texts(monkeypatch, mock_vectors):
     mock_func = MagicMock(return_value=mock_vectors)
-    monkeypatch.setattr("src.emb.embed_texts", mock_func)
+    monkeypatch.setattr("src.vectorstore.embed_texts", mock_func)
     return mock_func
 
 
@@ -143,19 +142,15 @@ class TestVectorstore:
     def test_load_and_split_document_content(self, mock_pdf_file):
         chunks = load_and_split_document(mock_pdf_file)
         full_text = "\n".join(chunks)
-        assert "technicaltest@alefeducation.com" in full_text
+        assert all(word in full_text for word in WORDS_IN_DOCUMENT)
 
     def test_ingest_document(
-        self, mock_pdf_file, mock_chunks, mock_vectors, mock_client
+        self, mock_pdf_file, mock_chunks, mock_embed_texts, mock_vectors, mock_client
     ):
+        chunks_uuids = [uuid.uuid4() for _ in range(len(mock_chunks))]
         with patch(
             "src.vectorstore.uuid.uuid4",
-            side_effect=[
-                uuid.UUID("71a18a69-2dbd-466b-99e5-4e3e213430a9"),
-                uuid.UUID("cdba0257-4895-4908-8dc7-97faa33564dc"),
-                uuid.UUID("1bf3fce1-6992-47ea-8728-9f55fe611b3b"),
-                uuid.UUID("ebff8d16-df8e-4913-807b-e39390fa3f74"),
-            ],
+            side_effect=[uuid.UUID("71a18a69-2dbd-466b-99e5-4e3e213430a9")] + chunks_uuids,
         ):
             metadata = ingest_document(mock_pdf_file, client=mock_client)
             mock_client.create_collection.assert_called_once_with(
@@ -169,7 +164,7 @@ class TestVectorstore:
             # mock_client.upsert.assert_called_once_with(
             #     collection_name='71a18a69-2dbd-466b-99e5-4e3e213430a9',
             #     points=models.Batch(
-            #         ids=['cdba0257-4895-4908-8dc7-97faa33564dc', '1bf3fce1-6992-47ea-8728-9f55fe611b3b', 'ebff8d16-df8e-4913-807b-e39390fa3f74'],
+            #         ids=[str(chunk_uuid) for chunk_uuid in chunks_uuids],
             #         payloads=[{"text": chunk_text} for chunk_text in mock_chunks],
             #         vectors=mock_vectors,
             #     ),

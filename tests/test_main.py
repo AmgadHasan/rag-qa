@@ -7,6 +7,8 @@ from qdrant_client import QdrantClient
 from src import models
 from src.main import app
 
+from . import PDF_FILE_PATH, CHUNKED_PDF_FILE_PATH, DOCUMENT_ID
+
 client = TestClient(app)
 
 
@@ -62,7 +64,7 @@ def test_ingest_pdf_success(
         id="123", file_name="test.pdf"
     )
 
-    with open("./samples/ml-engineer-tech-test.pdf", "rb") as f:
+    with open(PDF_FILE_PATH, "rb") as f:
         response = client.post("/ingest", files={"file": f})
 
     assert response.status_code == 200
