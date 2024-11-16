@@ -1,6 +1,11 @@
 # rag-qa
 Agent Framework for RAG-Based Question Generation and Summarization
 
+## Author
+Name: Amgad Hasan
+LinkedIn: https://www.linkedin.com/in/amgad-hasan/
+Website: https://amgadhasan.substack.com/
+
 ## How to run
 ### 1. Prerequisites
 Please make sure you have the following installed:
