@@ -40,13 +40,13 @@ curl -X 'POST' \
   'http://localhost:8000/ingest' \
   -H 'accept: application/json' \
   -H 'Content-Type: multipart/form-data' \
-  -F 'file=@ML Engineer Tech Test.pdf;type=application/pdf'
+  -F 'file=@./samples/markdown-file-02.pdf;type=application/pdf'
 ``` 
 response:
 ```
 {
-  "id": "497f5241-2178-45c0-b5ef-c7a5e530db93",
-  "file_name": "ML Engineer Tech Test.pdf"
+  "id": "c085b661-5208-43cb-b045-da9ced4ed16a",
+  "file_name": "markdown-file-02.pdf"
 }
 ```
 
@@ -58,23 +58,17 @@ curl -X 'POST' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "topic": "slope",
-  "document_id": "71a18a69-2dbd-466b-99e5-4e3e213430a9",
+  "topic": "convolution",
+  "document_id": "c085b661-5208-43cb-b045-da9ced4ed16a",
   "questions_type": "MCQ"
 }'
 ``` 
 response:
 ```json
 {
-  "topic": "slope",
+  "topic": "convolution",
   "questions_type": "MCQ",
-  "questions": [
-    "What does the slope of a line represent?",
-    "What is the formula for calculating the slope of a line given two points?",
-    "If the slope of a line is positive, what does this tell you about the line?",
-    "If the slope of a line is zero, what does this tell you about the line?",
-    "If the slope of a line is undefined, what does this tell you about the line?"
-  ]
+  "questions": "- Which of the following is NOT a key characteristic of convolutional layers in CNNs?\n    -  Feature extraction\n    -  Parameter sharing\n    -  Full connectivity\n    -  Local connectivity\n\n- What is the primary function of a pooling layer in a CNN?\n    -  Increase the dimensionality of feature maps\n    -  Introduce non-linearity into the network\n    -  Reduce the dimensionality of feature maps\n    -  Perform classification on the input data\n\n- What is the purpose of stride in a convolutional operation?\n    -  To control the receptive field of the convolutional filter\n    -  To adjust the number of output channels\n    -  To normalize the input data\n    -  To introduce randomness into the network\n\n- Which activation function is commonly used in the output layer of a CNN for multi-class classification?\n    -  ReLU\n    -  Sigmoid\n    -  Tanh\n    -  Softmax\n\n- What is the role of padding in a convolutional layer?\n    -  To prevent information loss at the edges of the input\n    -  To increase the computational complexity of the layer\n    -  To introduce noise into the input data\n    -  To normalize the output of the layer\n\n\n\n"
 }
 ```
 
@@ -86,14 +80,15 @@ curl -X 'POST' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "topic": "slope",
-  "document_id": "71a18a69-2dbd-466b-99e5-4e3e213430a9"
+  "topic": "convolution",
+  "document_id": "c085b661-5208-43cb-b045-da9ced4ed16a"
 }'
 ``` 
 response:
 ```json
 {
-  "detail": "Error generating summary: Error code: 400 - {'error': {'message': \"property 'max_completion_tokens' is unsupported, did you mean 'max_tokens'?\", 'type': 'invalid_request_error'}}"
+  "topic": "convolution",
+  "summary": "Convolutional Neural Networks (CNNs) are a specialized type of deep learning architecture designed primarily for processing grid-like data, such as images. \n\n**The core of CNNs lies in the \"convolutional layer.\"** This layer employs a set of learnable filters (also called kernels) that slide across the input data, performing element-wise multiplications and summings. This operation extracts features at different scales and locations within the input. \n\n**Think of it like this:** Imagine you're looking for a specific pattern in a picture. Instead of examining every pixel individually, you might use a magnifying glass (the filter) to scan the image and detect the presence of that pattern. CNNs use many filters to learn various features, from edges and corners to more complex shapes and textures.\n\n**Key benefits of convolutional layers:**\n\n* **Feature Extraction:** They automatically learn relevant features from the data, eliminating the need for manual feature engineering.\n* **Parameter Sharing:** Filters are applied across the entire input, sharing weights and reducing the number of parameters to learn.\n* **Translation Invariance:** CNNs are relatively robust to shifts and changes in the position of features within the input.\n\n**Beyond convolutional layers, CNNs typically include:**\n\n* **Pooling layers:** These downsample the feature maps, reducing dimensionality and making the network more robust to variations in input.\n* **Fully connected layers:** These layers perform classification or regression tasks based on the extracted features.\n\n**CNNs have revolutionized computer vision tasks like:**\n\n* Image classification\n* Object detection\n* Image segmentation\n* Facial recognition\n\nTheir success has also extended to other domains involving grid-like data, such as natural language processing (using word embeddings) and audio processing.\n\n\n"
 }
 ```
 
